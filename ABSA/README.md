@@ -1,5 +1,5 @@
 # ABSA_system
-Aspect based sentiment analysis）
+Aspect based sentiment analysis
 
 
 
