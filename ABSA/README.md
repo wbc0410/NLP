@@ -1,6 +1,6 @@
 # ABSA_system
 Aspect based sentiment analysis）
---------------------------------------
+
 
 
 Data Source:
@@ -12,4 +12,3 @@ yelp dataset :https://www.yelp.com/dataset
 stanford parser:https://nlp.stanford.edu/software/lex-parser.shtml
 
 
-* boot.py为程序流程的入口
