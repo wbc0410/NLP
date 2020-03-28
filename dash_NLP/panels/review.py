@@ -75,7 +75,7 @@ layout = [
                 className="subtitle",
                 children=[
                     indicator(
-                        "#00cc96", "Topic Modeling", "left_opportunities_indicator"
+                        "#00cc96", "Topic Cluster", "left_opportunities_indicator"
                     ),
                 ],
             ),

@@ -17,7 +17,7 @@ orderDataFrame = pd.DataFrame({
                     "Table ID":[1,2,3,4,5],
                     "Name":["A","B","C","D","E"],
                     "Date":[15,15,15,15,15],
-                    'time':["2020-03-26 12:30:00","2020-03-26 14:30","2020-03-26 18:30","2020-03-27 22:30","2020-03-27 23:30"],
+                    'time':["2020-03-29 12:30:00","2020-03-29 14:30","2020-03-29 18:30","2020-03-30 22:30","2020-03-30 23:30"],
                     "People":[1,4,2,3,4],
                     "remark":["Null","Null","Null","Null","Null"]
                     })
@@ -148,15 +148,26 @@ def generate_heatmap():
     # Heatmap
     hovertemplate = "<b> %{y}  %{x} <br><br> %{z} Patient Records"
     list_z = np.array(df_table)
+    
+    
     fig = go.Figure(data=go.Heatmap(
-        z = list_z,
-        x = list(range(1,11)),
-        y = df_table.index,
-        type="heatmap",
-        name="",
-        hovertemplate=False,
-        showscale=False,
-        colorscale=[[0, "#caf3ff"], [1, "#2c82ff"]],))
+            z = list_z,
+            x = list(range(1,11)),
+            y = df_table.index,
+            type="heatmap",
+            name="",
+            xgap = 3,
+            ygap = 3,
+            # mode = "lines",
+            # line= {
+            #     'width': 5,
+            #     'color': 'black'
+            # },
+            hovertemplate=False,
+            showscale=False,
+            colorscale=[[0, "#caf3ff"], [1, "#2c82ff"]],
+            )
+        )
 
     fig.update_layout(
         margin=dict(l=70, b=50, t=50, r=50),
@@ -168,15 +179,16 @@ def generate_heatmap():
             ticks="",
             tickfont=dict(family="sans-serif"),
             tickcolor="#ffffff",
+            showgrid = True,
+            gridcolor = "black"
         ),
         yaxis=dict(
-            side="left", ticks="", tickfont=dict(family="sans-serif"), ticksuffix=" "
+            side="left", ticks="", tickfont=dict(family="sans-serif"), ticksuffix=" ",showgrid = True
         ),
         hovermode="closest",
-        showlegend=False,
-
+        showlegend=False
     )
-
+    
     return fig
 
 
