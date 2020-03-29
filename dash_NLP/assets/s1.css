@@ -451,7 +451,7 @@ table {
 /*
 我太强了
 */
-  #aspect_bad .Select--multi .Select-value {
+  #aspect_bad  .Select-value {
     background-color: #ebf5ff;
     background-color: rgba(255,0,9,.14);
     border-radius: 2px;
@@ -464,12 +464,10 @@ table {
     margin-left: 5px;
     margin-top: 5px;
     vertical-align: top;
-}
-  .Select--multi .Select-value-icon{
-    display: none;
   }
-  .Select-clear-zone{
-    display: none;
+  .Select-value-icon{
+    display: None !important;
+    vertical-align: middle;
   }
   #Review_grid {
     display: -ms-grid;
@@ -506,10 +504,10 @@ table {
   #Review_indicators {
     -ms-grid-column: 3;
     -ms-grid-column-span: 4;
-    grid-column: 3 / 7;
+    grid-column: 1 / 7;
     -ms-grid-row: 2;
     -ms-grid-row-span: 1;
-    grid-row: 2 / 3;
+    grid-row: 1 / 2;
   }
 
   #Review_heatmap {
@@ -614,6 +612,35 @@ table {
     -ms-grid-row-span: 1;
     grid-row: 5 / 6;
   }
+
+  #Word_Cloud_container {
+    -ms-grid-column: 1;
+    -ms-grid-column-span: 6;
+    grid-column: 1 / 7;
+    -ms-grid-row: 5;
+    -ms-grid-row-span: 1;
+    grid-row: 4 / 6;
+  }
+
+
+  #TM_Table {
+    -ms-grid-column: 1;
+    -ms-grid-column-span: 6;
+    grid-column: 1 / 5;
+    -ms-grid-row: 5;
+    -ms-grid-row-span: 1;
+    grid-row: 2 / 4;
+  }
+
+  #TM_Chart {
+    -ms-grid-column: 1;
+    -ms-grid-column-span: 6;
+    grid-column: 5 / 7;
+    -ms-grid-row: 5;
+    -ms-grid-row-span: 1;
+    grid-row: 2 / 4;
+  }
+
 
   #cases_by_account {
     display: block;

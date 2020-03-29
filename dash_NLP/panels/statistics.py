@@ -9,45 +9,8 @@ from app import app, indicator, df_to_table
 import dash_table#看看是什么东西
 import numpy as np
 import copy
+import sqlite3
 
-# 评论文字表格
-wordTable = {"userID": list(range(1,101)),
-             "Review": ["Review 1", "Review 2", "Review 3", "Review 4", "Review 5"]*20,
-             "date":list(np.random.randint(low=1, high=30, size=100))}
-wordDataFrame = pd.DataFrame(wordTable)
-
-
-# Aspect 列表 分为好坏部分 #需要组合数据，得到数字并和string链接
-# 因为这玩意不是真正的前端，笑    有颜色插件吗
-# Aspect 需要月日年切换 或者过去30天内 所以需要数据有时间维度
-# 字典无法满足需要，要变成df 三列
-# value 及id，所以暂时设置成数字
-aspectDict = {"Name": ["Good Aspect 1", "Good Aspect 2", "Good Aspect 1", "Bad Aspect 1", "Bad Aspect 2", "Bad Aspect 1"],
-              "value": ['good1', 'good2', 'good3', 'bad1', 'bad2', 'bad3'],
-              "date": ['2020-03-14', '2020-03-14', '2020-03-20', '2020-03-20', '2020-03-02','2020-03-02'],
-              "type": [1, 1, 1, -1, -1, -1]
-              }
-aspectDataFrame = pd.DataFrame(aspectDict)
-# 下拉框的选择表，也需要如此显示 value 对应label 所以数据库中需要有各个aspect的id 作为value 或者本地处理需要把各个数据编号，现在临时用数字
-# value 应该是唯一值
-#############################################################################################################
-# 月每天上座人数数据
-listPeoplePerDay = list(np.random.randint(low=15, high=100, size=100))
-# 月每天好评率数据
-listRatePerDay = list(np.random.randint(low=80, high=100, size=100))
-# 月每天好评数数据
-listPosPerDay = list(np.random.randint(low=80, high=100, size=100))
-# 月每天差评数数据
-listNegPerDay = list(np.random.randint(low=80, high=100, size=100))
-# 时间数据
-listTime = [x.strftime("%Y-%m-%d") for x in pd.period_range(start="2019-12-17", end="2020-03-25", freq = "d")]
-
-listGraphBar = pd.DataFrame({"People":listPeoplePerDay,
-                                            "rate":listRatePerDay,
-                                            "Positive":listPosPerDay,
-                                            "Negative":listNegPerDay,
-                                            "Time":listTime})
-listGraphBar.index = range(1,101)
 
 #########################################################################################3
 #曲线选项
@@ -61,14 +24,21 @@ def divideAspect(df):
     """
     input aspectDataFrame
 
+    c.execute('''CREATE TABLE if not EXISTS ASPECT
+       (ID INT PRIMARY KEY NOT NULL,
+       REVIEW_ID           INT,
+       ASPECT        CHAR(50),
+       SENTIMENT         INT);''')
+
+
     return good &Aspect Dataframe include(aspect name ,number)
     """
     #divide df to good and bad part
-    df_b  = df[df["type"]<0]
-    df_g  = df[df["type"]>0]
+    df_b  = df[df["SENTIMENT"]<0]
+    df_g  = df[df["SENTIMENT"]>0]
     #find count of each type
-    df_good = df_b["Name"].value_counts().to_frame()
-    df_bad = df_g["Name"].value_counts().to_frame()
+    df_good = df_g["ASPECT"].value_counts().to_frame()
+    df_bad = df_b["ASPECT"].value_counts().to_frame()
     #structure dataframe
     df_good["Aspect"] = df_good.index
     df_good.columns = ["count","Aspect"]
@@ -107,14 +77,26 @@ def lead_source_callback(startTime,endTime):
     """
     #should begin with SQL Maybe a function
     #cut df
-    df_Aspect = aspectDataFrame.copy()
-    df_Aspect= df_Aspect[pd.to_datetime(df_Aspect["date"])>=startTime]
-    df_Aspect= df_Aspect[pd.to_datetime(df_Aspect["date"])<=endTime]
+
+    conn = sqlite3.connect('assets\DashTemp.db')
+    c = conn.cursor()
+
+    
+    sql = f"select a.* from ASPECT as a, (select ID from REVIEW where TIME >= '{startTime}' and TIME <= '{endTime}') as b where a.REVIEW_ID = b.ID"
+    df_Aspect = pd.read_sql(sql,conn)
+
+    conn.commit()
+    conn.close()
+
+    # df_Aspect = aspectDataFrame.copy()
+    # df_Aspect= df_Aspect[pd.to_datetime(df_Aspect["date"])>=startTime]
+    # df_Aspect= df_Aspect[pd.to_datetime(df_Aspect["date"])<=endTime]
     #get aspect dataframe
     df_goodAspect,df_badAspect = divideAspect(df_Aspect)
-    # comblne option
+    # comblne option  + " " +       str(df_goodAspect.iloc[aspectIndex]["count"])
+    # + " " +          str(df_badAspect.iloc[aspectIndex]["count"])
     aspectGoodOption = [
-            {"label": str(df_goodAspect.iloc[aspectIndex]["Aspect"]) + " " + 
+            {"label": str(df_goodAspect.iloc[aspectIndex]["Aspect"])  + " " + 
             str(df_goodAspect.iloc[aspectIndex]["count"]), 
             "value": str(
                 df_goodAspect.iloc[aspectIndex]["Aspect"])}
@@ -122,7 +104,7 @@ def lead_source_callback(startTime,endTime):
     ]
 
     aspectBadOption = [
-            {"label": str(df_badAspect.iloc[aspectIndex]["Aspect"]) + " " + 
+            {"label": str(df_badAspect.iloc[aspectIndex]["Aspect"])  + " " + 
             str(df_badAspect.iloc[aspectIndex]["count"]), 
             "value": str(
                 df_badAspect.iloc[aspectIndex]["Aspect"])}
@@ -148,13 +130,21 @@ def lead_source_callback(startTime,endTime):
 )
 def indicator_callback(startTime,endTime):
     # load sql
-    listGraphBar_incb = listGraphBar.copy()
-    #get result
-    listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']>=startTime]
-    listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']<=endTime]
+    # listGraphBar_incb = listGraphBar.copy()
+    # #get result
+    # listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']>=startTime]
+    # listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']<=endTime]
 
-    peopleText= sum(listGraphBar_incb["People"])
-    rateText= str(listGraphBar_incb["rate"].mean())[:4] + "%"
+    conn = sqlite3.connect('assets\DashTemp.db')
+    c = conn.cursor()
+    sql = f"select * from DAY where TIME >= '{startTime}' and TIME <= '{endTime}'"
+    listGraphBar_incb = pd.read_sql(sql,conn)
+    conn.commit()
+    conn.close()
+
+
+    peopleText= sum(listGraphBar_incb["PEOPLE"])
+    rateText= str(listGraphBar_incb["RATE"].mean())[:4] + "%"
     return peopleText,rateText
 
 
@@ -171,18 +161,21 @@ def indicator_callback(startTime,endTime):
 )
 def figure_callback(startTime,endTime,select):
     # load sql
-    listGraphBar_incb = listGraphBar.copy()
-    listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']>=startTime]
-    listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']<=endTime]
+
+    conn = sqlite3.connect('assets\DashTemp.db')
+    c = conn.cursor()
+    sql = f"select * from DAY where TIME >= '{startTime}' and TIME <= '{endTime}'"
+    listGraphBar_incb = pd.read_sql(sql,conn)
+    conn.commit()
+    conn.close()
+
+
+    # listGraphBar_incb = listGraphBar.copy()
+    # listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']>=startTime]
+    # listGraphBar_incb = listGraphBar_incb[listGraphBar_incb['Time']<=endTime]
     #get result
-    """
-    listGraphBar = pd.DataFrame({"People":listPeoplePerDay,
-                                            "rate":listRatePerDay,
-                                            "Positive":listPosPerDay,
-                                            "Negative":listNegPerDay,
-                                            "Time":listTime})
-    """
-    listGraphBar_incb.index = listGraphBar_incb['Time']
+
+    listGraphBar_incb.index = listGraphBar_incb['TIME']
     layout_count = dict(
         autosize=True,
         automargin=True,
@@ -198,7 +191,7 @@ def figure_callback(startTime,endTime,select):
                     type="scatter",
                     mode="lines+markers",
                     x=listGraphBar_incb.index,
-                    y=listGraphBar_incb["People"],
+                    y=listGraphBar_incb["PEOPLE"],
                     line=dict(shape="spline", smoothing=2, width=1, color="#fac1b7"),
                     marker=dict(symbol="diamond-open"),
                 ),
@@ -209,7 +202,7 @@ def figure_callback(startTime,endTime,select):
             dict(
                     type="scatter",
                     mode="lines+markers",
-                    y=listGraphBar_incb["rate"]/100,
+                    y=listGraphBar_incb["RATE"],
                     x=listGraphBar_incb.index,
                     line=dict(shape="spline", smoothing=2, width=1, color="#fac1b7"),
                     marker=dict(symbol="diamond-open"),
@@ -222,7 +215,7 @@ def figure_callback(startTime,endTime,select):
                     type="scatter",
                     mode="lines+markers",
                     name = "Positive Reviews",
-                    y=listGraphBar_incb["Positive"],
+                    y=listGraphBar_incb["POS_REVIEW"],
                     x=listGraphBar_incb.index,
                     line=dict(shape="spline", smoothing=2, width=1, color="#fac1b7"),
                     marker=dict(symbol="diamond-open"),
@@ -231,7 +224,7 @@ def figure_callback(startTime,endTime,select):
                     type="scatter",
                     mode="lines+markers",
                     name = "Negative Reviews",
-                    y=listGraphBar_incb["Negative"],
+                    y=listGraphBar_incb["NEG_REVIEW"],
                     x=listGraphBar_incb.index,
                     line=dict(shape="spline", smoothing=2, width=1, color="#a9bb95"),
                     marker=dict(symbol="diamond-open"),
