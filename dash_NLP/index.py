@@ -17,7 +17,7 @@ app.layout = html.Div(
                 html.Span(
                     className="app-title",
                     children=[
-                        dcc.Markdown("**BLZC**"),
+                        dcc.Markdown("**Tasty Assistant**"),
                         html.Span(
                             id="subtitle",
                             children=dcc.Markdown("&nbsp Restaurant Dashboard"),
